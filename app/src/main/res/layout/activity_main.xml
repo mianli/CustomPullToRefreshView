@@ -1,0 +1,19 @@
+<com.mli.crown.pullview.PullToRefreshView
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:id="@+id/pullview"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<include layout="@layout/header_pullview"></include>
+	<TextView
+		android:id="@+id/container"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#f4ff18"
+		android:text="test"
+		android:textSize="40sp"
+		android:gravity="center">
+	</TextView>
+	<include layout="@layout/footer_pullview"></include>
+
+</com.mli.crown.pullview.PullToRefreshView>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	android:id="@+id/footer_view"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@+id/footer_tv"
+		android:gravity="center"
+		android:layout_width="match_parent"
+		android:layout_height="50dp"
+		android:text="footer"
+		android:textColor="#1616ff"/>
+</RelativeLayout>
