@@ -13,14 +13,12 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		final PullToRefreshView pullToRefreshView = (PullToRefreshView) findViewById(R.id.pullview);
-		final TextView tv = (TextView) findViewById(R.id.container);
 		pullToRefreshView.setPullToRefreshListener(new PullToRefreshListener() {
 			@Override
 			public void toRefresh() {
 				SimService.simService(MainActivity.this, new SimService.Callback() {
 					@Override
 					public void callback(boolean state) {
-						tv.setText("refreshed");
 						Toast.makeText(MainActivity.this, "toRefresh success", Toast.LENGTH_SHORT).show();
 						pullToRefreshView.revertState();
 					}
@@ -32,7 +30,6 @@ public class MainActivity extends Activity {
 				SimService.simService(MainActivity.this, new SimService.Callback() {
 					@Override
 					public void callback(boolean state) {
-						tv.setText("loaded");
 						Toast.makeText(MainActivity.this, "load success", Toast.LENGTH_SHORT).show();
 						pullToRefreshView.revertState();
 					}
