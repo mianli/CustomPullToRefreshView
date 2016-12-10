@@ -14,7 +14,7 @@ public class MainActivity extends Activity {
 
 		final PullToRefreshView pullToRefreshView = (PullToRefreshView) findViewById(R.id.pullview);
 		final TextView tv = (TextView) findViewById(R.id.container);
-		pullToRefreshView.setPullToRefreshListener(new pullToRefreshListener() {
+		pullToRefreshView.setPullToRefreshListener(new PullToRefreshListener() {
 			@Override
 			public void toRefresh() {
 				SimService.simService(MainActivity.this, new SimService.Callback() {

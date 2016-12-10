@@ -3,7 +3,7 @@ package com.mli.crown.pullview;
 /**
  * Created by crown on 2016/12/8.
  */
-public interface pullToRefreshListener {
+public interface PullToRefreshListener {
 	void toRefresh();
 	void toReLoad();
 }

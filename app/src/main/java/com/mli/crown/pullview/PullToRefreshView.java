@@ -45,7 +45,7 @@ public class PullToRefreshView extends RelativeLayout {
 	private boolean mCanRefresh;
 	private boolean mCanLoad;
 
-	private pullToRefreshListener mListener;
+	private PullToRefreshListener mListener;
 
 	public PullToRefreshView(Context context) {
 		this(context, null);
@@ -59,7 +59,7 @@ public class PullToRefreshView extends RelativeLayout {
 		super(context, attrs, defStyleAttr);
 	}
 
-	public void setPullToRefreshListener(pullToRefreshListener listener) {
+	public void setPullToRefreshListener(PullToRefreshListener listener) {
 		this.mListener = listener;
 	}
 
