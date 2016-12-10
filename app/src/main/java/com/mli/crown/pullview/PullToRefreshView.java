@@ -126,7 +126,9 @@ public class PullToRefreshView extends RelativeLayout {
 					mCanLoad = true;
 					changeState();
 				}else {
-					mState = ePullState.eNormal;
+					if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
+						mState = ePullState.eNormal;
+					}
 					mCanRefresh = false;
 					mCanLoad = false;
 					changeState();
