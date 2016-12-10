@@ -27,7 +27,7 @@ public class PullToRefreshView extends RelativeLayout {
 		eRefreshDone,
 		eWillLoad,
 		eLoading,
-		eLoadingDone
+		eLoadDone
 	}
 
 	private static final int REVERT_DURATION = 1000;
@@ -120,14 +120,19 @@ public class PullToRefreshView extends RelativeLayout {
 					changeState();
 				}else if( ((!mCanAutoLoad && -mPullHeight >= mLoadingHeight)
 					|| mCanAutoLoad && -mPullHeight > 0)
-					&& mState != ePullState.eLoading) {
+					&&
+					( (mState != ePullState.eLoading && mState != ePullState.eLoadDone)
+					|| (mState == ePullState.eLoadDone && -mPullHeight >= mLoadingHeight))) {
+					Log.i(TAG, "state: " + mState);
 					mState = ePullState.eWillLoad;
 					mCanRefresh = false;
 					mCanLoad = true;
 					changeState();
 				}else {
 					if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
-						mState = ePullState.eNormal;
+						if((!mCanAutoLoad || mState != ePullState.eLoadDone) && mState != ePullState.eRefreshDone) {
+							mState = ePullState.eNormal;
+						}
 					}
 					mCanRefresh = false;
 					mCanLoad = false;
@@ -203,14 +208,14 @@ public class PullToRefreshView extends RelativeLayout {
 				});
 			}
 		};
-		mTimer.schedule(mTimerTask, 0, 1);
+		mTimer.schedule(mTimerTask, 0, 5);
 	}
 
 	private void revertPullHeight() {
 		if(mPullHeight != 0) {
 			if(mPullHeight < 0) {
-				if(mState != ePullState.eLoading
-					|| (mState == ePullState.eLoading && mPullHeight != -mLoadingHeight))
+				if(mState != ePullState.eLoading && mState != ePullState.eLoadDone
+					|| mPullHeight != -mLoadingHeight)
 				mPullHeight += 1;
 				if(mPullHeight >0) {
 					mPullHeight = 0;
@@ -218,8 +223,8 @@ public class PullToRefreshView extends RelativeLayout {
 					mTimer = null;
 				}
 			}else {
-				if(mState != ePullState.eRefreshing
-					|| (mState == ePullState.eRefreshing && mPullHeight != mRefreshHeight)) {
+				if(mState != ePullState.eRefreshing && mState != ePullState.eRefreshDone
+					|| mPullHeight != mRefreshHeight) {
 					mPullHeight -= 1;
 				}
 				if(mPullHeight < 0) {
@@ -236,20 +241,21 @@ public class PullToRefreshView extends RelativeLayout {
 	public void revertState() {
 		if(mState == ePullState.eRefreshing) {
 			mState = ePullState.eRefreshDone;
-			changeState();
 		}else if(mState == ePullState.eLoading) {
-			mState = ePullState.eLoadingDone;
+			mState = ePullState.eLoadDone;
 		}
 		changeState();
-		mState = ePullState.eNormal;
+		mCanRefresh = false;
+		mCanLoad = false;
 		mHandler.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				changeState();
-				mCanRefresh = false;
-				mCanLoad = false;
+				if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
+					mState = ePullState.eNormal;
+					changeState();
+				}
 			}
-		}, 1000);
+		}, 5000);
 	}
 
 	private void changeState() {
@@ -272,7 +278,7 @@ public class PullToRefreshView extends RelativeLayout {
 			case eRefreshDone:
 				mShowStateText.setText("刷新成功");
 				break;
-			case eLoadingDone:
+			case eLoadDone:
 				mShowStateText.setText("加载成功");
 				break;
 		}
