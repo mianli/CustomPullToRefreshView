@@ -46,12 +46,14 @@ public class PullToRefreshView extends RelativeLayout {
 
 	private ePullState  mState = ePullState.eNormal;
 
+	private int ratio = 3;
 	private int mRefreshHeight = 200;
 	private int mLoadingHeight = 200;
 
 	private boolean mCanRefresh;
 	private boolean mCanLoad;
 
+	//是否自动加载
 	private boolean mCanAutoLoad = true;
 
 	private PullToRefreshListener mListener;
@@ -95,8 +97,7 @@ public class PullToRefreshView extends RelativeLayout {
 				mFooterView.setVisibility(VISIBLE);
 				mMovingY = ev.getY();
 
-				Log.i(TAG, "pullheight" + mPullHeight);
-				mPullHeight = (int) ((mMovingY - mStartY) / 3 + mOffsetY);
+				mPullHeight = (int) ((mMovingY - mStartY) / ratio + mOffsetY);
 				if(mState == ePullState.eRefreshing && mPullHeight < 0) {
 					mPullHeight = 0;
 					Log.i(TAG, "cant toRefresh");
@@ -109,31 +110,25 @@ public class PullToRefreshView extends RelativeLayout {
 					mStartY = ev.getY();
 					mOffsetY = 0;
 					return super.dispatchTouchEvent(ev);
-				}else {
-					mPullHeight = (int) ((mMovingY - mStartY) / 3 + mOffsetY);
-					requestLayout();
 				}
-				if(mPullHeight >= mRefreshHeight && mState != ePullState.eRefreshing) {
-					mState = ePullState.eWillRefresh;
-					mCanRefresh = true;
-					mCanLoad = false;
-					changeState();
-				}else if( ((!mCanAutoLoad && -mPullHeight >= mLoadingHeight)
-					|| mCanAutoLoad && -mPullHeight > 0)
-					&&
-					( (mState != ePullState.eLoading && mState != ePullState.eLoadDone)
-					|| (mState == ePullState.eLoadDone && -mPullHeight >= mLoadingHeight))) {
-					Log.i(TAG, "state: " + mState);
-					mState = ePullState.eWillLoad;
-					mCanRefresh = false;
-					mCanLoad = true;
-					changeState();
-				}else {
-					if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
-						if((!mCanAutoLoad || mState != ePullState.eLoadDone) && mState != ePullState.eRefreshDone) {
-							mState = ePullState.eNormal;
-						}
+				requestLayout();
+				Log.i(TAG, "现在的状态：" + mState);
+				if(mPullHeight >= mRefreshHeight) {
+					if(mState != ePullState.eRefreshing) {
+						mState = ePullState.eWillRefresh;
+						mCanRefresh = true;
+						mCanLoad = false;
+						changeState();
 					}
+				}else if((mCanAutoLoad && -mPullHeight > 0) || -mPullHeight > mLoadingHeight) {
+					if(mState != ePullState.eLoading) {
+						mState = ePullState.eWillLoad;
+						mCanRefresh = false;
+						mCanLoad = true;
+						changeState();
+					}
+				}else if(mState != ePullState.eRefreshing && mState != ePullState.eLoading){
+					mState = ePullState.eNormal;
 					mCanRefresh = false;
 					mCanLoad = false;
 					changeState();
@@ -208,29 +203,32 @@ public class PullToRefreshView extends RelativeLayout {
 				});
 			}
 		};
-		mTimer.schedule(mTimerTask, 0, 5);
+		mTimer.schedule(mTimerTask, 0, 1);
 	}
 
 	private void revertPullHeight() {
 		if(mPullHeight != 0) {
 			if(mPullHeight < 0) {
 				if(mState != ePullState.eLoading && mState != ePullState.eLoadDone
-					|| mPullHeight != -mLoadingHeight)
-				mPullHeight += 1;
-				if(mPullHeight >0) {
-					mPullHeight = 0;
-					mTimer.cancel();
-					mTimer = null;
+					|| mPullHeight != -mLoadingHeight) {
+					mPullHeight += 1;
+					if(mPullHeight >=0) {
+						mPullHeight = 0;
+						mTimer.cancel();
+						mTimer = null;
+					}
 				}
 			}else {
 				if(mState != ePullState.eRefreshing && mState != ePullState.eRefreshDone
 					|| mPullHeight != mRefreshHeight) {
 					mPullHeight -= 1;
-				}
-				if(mPullHeight < 0) {
-					mPullHeight = 0;
-					mTimer.cancel();
-					mTimer = null;
+					Log.i(TAG, "现在正在刷新之后恢复原状:" + mPullHeight);
+					if(mPullHeight <= 0) {
+						Log.i(TAG, "不能被拖动了");
+						mPullHeight = 0;
+						mTimer.cancel();
+						mTimer = null;
+					}
 				}
 			}
 			requestLayout();
