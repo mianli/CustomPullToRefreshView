@@ -1,4 +1,4 @@
-package com.mli.crown.pullview;
+package com.mli.crown.pullview.pulltorefresh;
 
 import android.content.Context;
 import android.os.Handler;
@@ -8,6 +8,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.mli.crown.pullview.R;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,8 +35,8 @@ public class PullToRefreshView extends RelativeLayout {
 	private static final int REVERT_DURATION = 1000;
 
 	boolean isLayout;
-	private View mHeaderView;
-	private View mFooterView;
+	private iPullToRefreshViewStateListener mHeader;
+	private iPullToRefreshViewStateListener mFooter;
 	private View mContainer;
 
 	private float mStartY;
@@ -47,18 +49,18 @@ public class PullToRefreshView extends RelativeLayout {
 	private ePullState  mState = ePullState.eNormal;
 
 	private int ratio = 3;
-	private int mRefreshHeight = 200;
-	private int mLoadingHeight = 200;
+	private int mRefreshHeight;
+	private int mLoadingHeight;
 
 	private boolean mCanRefresh;
 	private boolean mCanLoad;
+
+	private boolean mEventUp;
 
 	//是否自动加载
 	private boolean mCanAutoLoad = true;
 
 	private PullToRefreshListener mListener;
-
-	private TextView mShowStateText;
 
 	public PullToRefreshView(Context context) {
 		this(context, null);
@@ -80,6 +82,8 @@ public class PullToRefreshView extends RelativeLayout {
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		switch (ev.getActionMasked()) {
 			case MotionEvent.ACTION_DOWN:
+				mEventUp = false;
+
 				mStartY = ev.getY();
 				if(mTimerTask != null) {
 					mTimerTask.cancel();
@@ -93,8 +97,6 @@ public class PullToRefreshView extends RelativeLayout {
 				}
 				break;
 			case MotionEvent.ACTION_MOVE:
-				mHeaderView.setVisibility(VISIBLE);
-				mFooterView.setVisibility(VISIBLE);
 				mMovingY = ev.getY();
 
 				mPullHeight = (int) ((mMovingY - mStartY) / ratio + mOffsetY);
@@ -135,6 +137,7 @@ public class PullToRefreshView extends RelativeLayout {
 				}
 				break;
 			case MotionEvent.ACTION_UP:
+				mEventUp = true;
 				revertNormal();
 				if(mListener != null) {
 					if(mCanRefresh) {
@@ -162,21 +165,25 @@ public class PullToRefreshView extends RelativeLayout {
 		if(!isLayout) {
 			isLayout = true;
 			super.onLayout(changed, l, t, r, b);
-			mHeaderView = findViewById(R.id.header_view);
-			mFooterView = findViewById(R.id.footer_view);
+			mHeader = new PullToRefreshHeader(this);
+			mFooter = new PullToRefreshFooter(this);
 			mContainer = findViewById(R.id.container);
-			mHeaderView.setVisibility(GONE);
-			mFooterView.setVisibility(GONE);
 
-			mShowStateText = (TextView) findViewById(R.id.container);
+			mFooter.getView().post(new Runnable() {
+				@Override
+				public void run() {
+					mRefreshHeight = mHeader.getWillLoadingHeight();
+					mLoadingHeight = mFooter.getWillLoadingHeight();
+				}
+			});
 		}
-			//下拉
-			mHeaderView.layout(0, mPullHeight - mHeaderView.getMeasuredHeight(),
-				getWidth(), mPullHeight);
-			mContainer.layout(0, mPullHeight,
+		//下拉
+		mHeader.getView().layout(0, mPullHeight - mHeader.getView().getMeasuredHeight(),
+			getWidth(), mPullHeight);
+		mContainer.layout(0, mPullHeight,
 				getWidth(), mPullHeight + mContainer.getHeight());
-		mFooterView.layout(0, mPullHeight + mFooterView.getHeight(), getWidth(),
-			2 * mFooterView.getHeight() + mPullHeight);
+		mFooter.getView().layout(0, mPullHeight + mFooter.getView().getHeight(), getWidth(),
+			2 * mFooter.getView().getHeight() + mPullHeight);
 	}
 
 	private void revertNormal() {
@@ -222,9 +229,7 @@ public class PullToRefreshView extends RelativeLayout {
 				if(mState != ePullState.eRefreshing && mState != ePullState.eRefreshDone
 					|| mPullHeight != mRefreshHeight) {
 					mPullHeight -= 1;
-					Log.i(TAG, "现在正在刷新之后恢复原状:" + mPullHeight);
 					if(mPullHeight <= 0) {
-						Log.i(TAG, "不能被拖动了");
 						mPullHeight = 0;
 						mTimer.cancel();
 						mTimer = null;
@@ -236,48 +241,53 @@ public class PullToRefreshView extends RelativeLayout {
 	}
 
 	//恢复正常状态
-	public void revertState() {
+	public void revertState(final boolean result) {
 		if(mState == ePullState.eRefreshing) {
 			mState = ePullState.eRefreshDone;
 		}else if(mState == ePullState.eLoading) {
 			mState = ePullState.eLoadDone;
 		}
-		changeState();
+		changeState(result);
 		mCanRefresh = false;
 		mCanLoad = false;
 		mHandler.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
+				if(mState != ePullState.eRefreshing && mState != ePullState.eLoading && mEventUp) {
 					mState = ePullState.eNormal;
-					changeState();
+					changeState(result);
 				}
 			}
 		}, 5000);
 	}
 
 	private void changeState() {
+		changeState(true);
+	}
+
+	private void changeState(boolean result) {
 		switch (mState) {
 			case eRefreshing:
-				mShowStateText.setText("正在刷新");
+				mHeader.setLoadingState();
 				break;
 			case eLoading:
-				mShowStateText.setText("正在加载");
+				mFooter.setLoadingState();
 				break;
 			case eNormal:
-				mShowStateText.setText("正常状态");
+				mHeader.setNormalState();
+				mFooter.setNormalState();
 				break;
 			case eWillRefresh:
-				mShowStateText.setText("释放刷新");
+				mHeader.setWillLoadinState();
 				break;
 			case eWillLoad:
-				mShowStateText.setText("释放加载");
+				mFooter.setWillLoadinState();
 				break;
 			case eRefreshDone:
-				mShowStateText.setText("刷新成功");
+				mHeader.setLoadinDoneState(result);
 				break;
 			case eLoadDone:
-				mShowStateText.setText("加载成功");
+				mFooter.setLoadinDoneState(result);
 				break;
 		}
 	}

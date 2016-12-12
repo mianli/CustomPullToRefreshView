@@ -9,9 +9,9 @@
 	<TextView
 		android:id="@+id/header_tv"
 		android:layout_width="match_parent"
-		android:layout_height="50dp"
+		android:layout_height="40dp"
 		android:text="header"
 		android:gravity="center"
 		android:layout_alignParentBottom="true"
-		android:textColor="#00f"/>
+		android:textColor="#000000"/>
 </RelativeLayout>

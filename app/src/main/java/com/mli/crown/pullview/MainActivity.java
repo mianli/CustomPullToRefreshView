@@ -2,8 +2,10 @@ package com.mli.crown.pullview;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import com.mli.crown.pullview.pulltorefresh.PullToRefreshListener;
+import com.mli.crown.pullview.pulltorefresh.PullToRefreshView;
 
 public class MainActivity extends Activity {
 
@@ -20,7 +22,7 @@ public class MainActivity extends Activity {
 					@Override
 					public void callback(boolean state) {
 						Toast.makeText(MainActivity.this, "toRefresh success", Toast.LENGTH_SHORT).show();
-						pullToRefreshView.revertState();
+						pullToRefreshView.revertState(false);
 					}
 				});
 			}
@@ -31,17 +33,10 @@ public class MainActivity extends Activity {
 					@Override
 					public void callback(boolean state) {
 						Toast.makeText(MainActivity.this, "load success", Toast.LENGTH_SHORT).show();
-						pullToRefreshView.revertState();
+						pullToRefreshView.revertState(true);
 					}
 				});
 			}
 		});
-//		Handler handler = new Handler();
-//		handler.postDelayed(new Runnable() {
-//			@Override
-//			public void run() {
-//				pullView.setState(PullView.REVERT_STATE);
-//			}
-//		}, 10000);
 	}
 }

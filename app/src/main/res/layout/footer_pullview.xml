@@ -9,7 +9,7 @@
 		android:id="@+id/footer_tv"
 		android:gravity="center"
 		android:layout_width="match_parent"
-		android:layout_height="50dp"
+		android:layout_height="40dp"
 		android:text="footer"
 		android:textColor="#1616ff"/>
 </RelativeLayout>

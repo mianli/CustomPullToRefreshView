@@ -1,4 +1,4 @@
-<com.mli.crown.pullview.PullToRefreshView
+<com.mli.crown.pullview.pulltorefresh.PullToRefreshView
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:id="@+id/pullview"
@@ -16,4 +16,4 @@
 	</TextView>
 	<include layout="@layout/footer_pullview"></include>
 
-</com.mli.crown.pullview.PullToRefreshView>
+</com.mli.crown.pullview.pulltorefresh.PullToRefreshView>
