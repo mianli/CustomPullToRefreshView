@@ -1,4 +1,4 @@
-package com.mli.crown.pullview.pulltorefresh;
+package com.mli.crown.pullview.pulltorefresh.base;
 
 import android.content.Context;
 import android.os.Handler;
@@ -7,9 +7,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
-
-import com.mli.crown.pullview.R;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -17,10 +14,9 @@ import java.util.TimerTask;
 /**
  * Created by crown on 2016/11/9.
  */
-public class PullToRefreshView extends RelativeLayout {
+public class PullToRefreshLayout extends RelativeLayout {
 
 	private static final String TAG = "PullView";
-
 
 	private enum ePullState {
 		eNormal,
@@ -55,22 +51,20 @@ public class PullToRefreshView extends RelativeLayout {
 	private boolean mCanRefresh;
 	private boolean mCanLoad;
 
-	private boolean mEventUp;
-
 	//是否自动加载
 	private boolean mCanAutoLoad = true;
 
 	private PullToRefreshListener mListener;
 
-	public PullToRefreshView(Context context) {
+	public PullToRefreshLayout(Context context) {
 		this(context, null);
 	}
 
-	public PullToRefreshView(Context context, AttributeSet attrs) {
+	public PullToRefreshLayout(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
 
-	public PullToRefreshView(Context context, AttributeSet attrs, int defStyleAttr) {
+	public PullToRefreshLayout(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 	}
 
@@ -82,8 +76,6 @@ public class PullToRefreshView extends RelativeLayout {
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		switch (ev.getActionMasked()) {
 			case MotionEvent.ACTION_DOWN:
-				mEventUp = false;
-
 				mStartY = ev.getY();
 				if(mTimerTask != null) {
 					mTimerTask.cancel();
@@ -137,7 +129,6 @@ public class PullToRefreshView extends RelativeLayout {
 				}
 				break;
 			case MotionEvent.ACTION_UP:
-				mEventUp = true;
 				revertNormal();
 				if(mListener != null) {
 					if(mCanRefresh) {
@@ -163,12 +154,10 @@ public class PullToRefreshView extends RelativeLayout {
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		if(!isLayout) {
-			isLayout = true;
 			super.onLayout(changed, l, t, r, b);
 			mHeader = new PullToRefreshHeader(this);
+			mContainer = getChildAt(1);
 			mFooter = new PullToRefreshFooter(this);
-			mContainer = findViewById(R.id.container);
-
 			mFooter.getView().post(new Runnable() {
 				@Override
 				public void run() {
@@ -176,10 +165,12 @@ public class PullToRefreshView extends RelativeLayout {
 					mLoadingHeight = mFooter.getWillLoadingHeight();
 				}
 			});
+			isLayout = true;
+			return;
 		}
 		//下拉
 		mHeader.getView().layout(0, mPullHeight - mHeader.getView().getMeasuredHeight(),
-			getWidth(), mPullHeight);
+				getWidth(), mPullHeight);
 		mContainer.layout(0, mPullHeight,
 				getWidth(), mPullHeight + mContainer.getHeight());
 		mFooter.getView().layout(0, mPullHeight + mFooter.getView().getHeight(), getWidth(),
@@ -253,7 +244,7 @@ public class PullToRefreshView extends RelativeLayout {
 		mHandler.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				if(mState != ePullState.eRefreshing && mState != ePullState.eLoading && mEventUp) {
+				if(mState != ePullState.eRefreshing && mState != ePullState.eLoading) {
 					mState = ePullState.eNormal;
 					changeState(result);
 				}

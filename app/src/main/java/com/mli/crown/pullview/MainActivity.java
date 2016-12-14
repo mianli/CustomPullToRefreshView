@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.mli.crown.pullview.pulltorefresh.PullToRefreshListener;
-import com.mli.crown.pullview.pulltorefresh.PullToRefreshView;
+import com.mli.crown.pullview.pulltorefresh.base.PullToRefreshListener;
+import com.mli.crown.pullview.pulltorefresh.base.PullToRefreshLayout;
 
 public class MainActivity extends Activity {
 
@@ -14,7 +14,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		final PullToRefreshView pullToRefreshView = (PullToRefreshView) findViewById(R.id.pullview);
+		final PullToRefreshLayout pullToRefreshView = (PullToRefreshLayout) findViewById(R.id.pullview);
 		pullToRefreshView.setPullToRefreshListener(new PullToRefreshListener() {
 			@Override
 			public void toRefresh() {
