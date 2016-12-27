@@ -25,17 +25,12 @@ public class PullToRefreshHeader implements iPullToRefreshViewStateListener{
 
 	public PullToRefreshHeader(View view) {
 		mView = view.findViewById(R.id.header_view);
-		mView.post(new Runnable() {
-			@Override
-			public void run() {
-				mStateTv = (TextView) mView.findViewById(R.id.header_tv);
-				mRefreshImgv = (ImageView) mView.findViewById(R.id.refresh_imgv);
-				animator = ObjectAnimator.ofFloat(mRefreshImgv, "rotation", 360.f, 0.f);
-				animator.setRepeatCount(-1);
-				animator.setInterpolator(new LinearInterpolator());
-				animator.setDuration(700);
-			}
-		});
+		mStateTv = (TextView) mView.findViewById(R.id.header_tv);
+		mRefreshImgv = (ImageView) mView.findViewById(R.id.refresh_imgv);
+		animator = ObjectAnimator.ofFloat(mRefreshImgv, "rotation", 360.f, 0.f);
+		animator.setRepeatCount(-1);
+		animator.setInterpolator(new LinearInterpolator());
+		animator.setDuration(700);
 	}
 
 	@Override

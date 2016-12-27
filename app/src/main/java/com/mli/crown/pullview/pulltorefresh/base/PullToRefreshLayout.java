@@ -38,6 +38,8 @@ public class PullToRefreshLayout extends RelativeLayout {
 	private float mStartY;
 	private float mMovingY;
 
+	private float mMovingOffset;
+
 	private float mOffsetY;
 
 	private int mPullHeight;
@@ -51,10 +53,24 @@ public class PullToRefreshLayout extends RelativeLayout {
 	private boolean mCanRefresh;
 	private boolean mCanLoad;
 
+	boolean mDispatch = false;
+
 	//是否自动加载
 	private boolean mCanAutoLoad = true;
 
 	private PullToRefreshListener mListener;
+
+	private iPullToRefreshDispatchListener mDispatchListener = new iPullToRefreshDispatchListener() {
+		@Override
+		public boolean canRefresh() {
+			return true;
+		}
+
+		@Override
+		public boolean canLoad() {
+			return true;
+		}
+	};
 
 	public PullToRefreshLayout(Context context) {
 		this(context, null);
@@ -72,6 +88,12 @@ public class PullToRefreshLayout extends RelativeLayout {
 		this.mListener = listener;
 	}
 
+	public void setDispatchListener(iPullToRefreshDispatchListener listener) {
+		this.mDispatchListener = listener;
+	}
+
+	private int mEvents = 0;
+
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		switch (ev.getActionMasked()) {
@@ -87,48 +109,74 @@ public class PullToRefreshLayout extends RelativeLayout {
 					}
 					requestLayout();
 				}
+				mEvents = 0;
+				break;
+			case MotionEvent.ACTION_POINTER_DOWN:
+			case MotionEvent.ACTION_POINTER_UP:
+				// 过滤多点触碰
+				mEvents = -1;
 				break;
 			case MotionEvent.ACTION_MOVE:
-				mMovingY = ev.getY();
+				if(mEvents == -1) {
+					break;
+				}
 
-				mPullHeight = (int) ((mMovingY - mStartY) / ratio + mOffsetY);
-				if(mState == ePullState.eRefreshing && mPullHeight < 0) {
+				if(mState == ePullState.eRefreshing && mPullHeight < 0) {//正在刷新的时候，不能进行上拉
 					mPullHeight = 0;
 					Log.i(TAG, "cant toRefresh");
 					mStartY = ev.getY();
 					mOffsetY = 0;
-					return super.dispatchTouchEvent(ev);
-				}else if(mState == ePullState.eLoading && mPullHeight > 0) {
+					return false;
+				}else if(mState == ePullState.eLoading && mPullHeight > 0) {//正在加载的时候，不能进行上拉
 					mPullHeight =0;
 					Log.i(TAG, "cant load");
 					mStartY = ev.getY();
 					mOffsetY = 0;
-					return super.dispatchTouchEvent(ev);
+					return false;
 				}
-				requestLayout();
+
+				Log.i(TAG, String.valueOf(mDispatchListener.canRefresh()) + mDispatchListener.canLoad());
+				mMovingOffset = ev.getY();
+
+				if(mDispatchListener.canRefresh() || mDispatchListener.canLoad()) {
+					mMovingY = ev.getY();
+					mPullHeight = (int) ((mMovingY - mStartY) / ratio + mOffsetY);
+					requestLayout();
+				}
+
 				Log.i(TAG, "现在的状态：" + mState);
-				if(mPullHeight >= mRefreshHeight) {
-					if(mState != ePullState.eRefreshing) {
+				if(mPullHeight >= mRefreshHeight) {//进行下拉，超过可刷新的高度
+					if(mState != ePullState.eRefreshing) {//如果不是在刷新就进行刷新
 						mState = ePullState.eWillRefresh;
 						mCanRefresh = true;
 						mCanLoad = false;
+						mDispatch = false;
 						changeState();
 					}
-				}else if((mCanAutoLoad && -mPullHeight > 0) || -mPullHeight > mLoadingHeight) {
-					if(mState != ePullState.eLoading) {
+					Log.i(TAG, "will refresh dispatch:" + mDispatch);
+				//拖动到底部能自动进行加载并有上拉动作或者上拉超过上拉加载的高度值,如果不是在加载就进行加载
+				}else if((mCanAutoLoad && -mPullHeight > 0 && mDispatchListener.canLoad()) || -mPullHeight > mLoadingHeight) {
+					if(mState != ePullState.eLoading ) {
 						mState = ePullState.eWillLoad;
 						mCanRefresh = false;
 						mCanLoad = true;
 						changeState();
 					}
+					Log.i(TAG, "will load dispatch:" + mDispatch);
+				//如果不是在刷新状态，也不是在加载状态，拖动的过程将状态重置为正常状态
 				}else if(mState != ePullState.eRefreshing && mState != ePullState.eLoading){
 					mState = ePullState.eNormal;
 					mCanRefresh = false;
 					mCanLoad = false;
 					changeState();
+					Log.i(TAG, "dispatch:" + mDispatch);
+				}
+				if(mDispatchListener.canRefresh() && mPullHeight > 0 || mDispatchListener.canLoad() && mPullHeight < 0) {
+					return false;
 				}
 				break;
 			case MotionEvent.ACTION_UP:
+				//释放恢复状态
 				revertNormal();
 				if(mListener != null) {
 					if(mCanRefresh) {
@@ -147,8 +195,7 @@ public class PullToRefreshLayout extends RelativeLayout {
 			default:
 				break;
 		}
-		super.dispatchTouchEvent(ev);
-		return true;
+		return super.dispatchTouchEvent(ev);
 	}
 
 	@Override
@@ -276,9 +323,11 @@ public class PullToRefreshLayout extends RelativeLayout {
 				break;
 			case eRefreshDone:
 				mHeader.setLoadinDoneState(result);
+				mDispatch = true;
 				break;
 			case eLoadDone:
 				mFooter.setLoadinDoneState(result);
+				mDispatch = true;
 				break;
 		}
 	}

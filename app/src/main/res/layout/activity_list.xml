@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.mli.crown.pullview.pulltorefresh.base.PullToRefreshLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:id="@+id/pulllistlayout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<include layout="@layout/header_pullview"></include>
+
+	<com.mli.crown.pullview.pulltorefresh.base.PullGridView
+		android:id="@+id/listview"
+		android:background="#ddee00ff"
+		android:layout_width="match_parent"
+		android:dividerHeight="5dp"
+		android:layout_height="match_parent">
+	</com.mli.crown.pullview.pulltorefresh.base.PullGridView>
+
+	<include layout="@layout/footer_pullview"></include>
+</com.mli.crown.pullview.pulltorefresh.base.PullToRefreshLayout>
